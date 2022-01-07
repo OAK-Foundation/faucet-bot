@@ -1,35 +1,29 @@
-require('dotenv').config()
 const Discord = require('discord.js');
 const axios = require('axios');
 const _ = require('lodash');
 const pdKeyring = require('@polkadot/keyring');
-const config = require('../config');
-
+const config = require('./config');
 
 // Check environment variables valid
 if (!process.env.ACCESS_TOKEN) {
   throw Error('Launch failed. ACCESS_TOKEN evironment variable is not set.');
 }
 
-if (!process.env.BACKEND_URL) {
-  throw Error('Launch failed. BACKEND_URL evironment variable is not set.');
-}
-
-const { tokenSymbol, sendAmount, polkascanUrl, units } = config;
+const { tokenSymbol, sendAmount, units, networkName } = config;
 
 let ax = axios.create({
-  baseURL: process.env.BACKEND_URL,
+  baseURL: process.env.BACKEND_URL || 'http://127.0.0.1:5555',
   timeout: 10000,
 });
 
-const client = new Discord.Client();
+const client = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES] });
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
-client.on('message', async msg => {
+client.on('messageCreate', async msg => {
   const { content, author: { id: sender } } = msg;
-  let [action, arg0, arg1] = content.split(' ');
+  let [action, arg0] = content.split(' ');
 
   if (action === '!balance') {
     const res = await ax.get('/balance');
@@ -47,16 +41,14 @@ client.on('message', async msg => {
     try {
       pdKeyring.decodeAddress(arg0);
     } catch (e) {
-      msg.reply(`address ${arg0} entered is incompatible to OAK Network.`);
+      msg.reply(`address ${arg0} entered is incompatible to ${networkName}.`);
       return;
     }
-
-    let amount = sendAmount;
 
     const res = await ax.post('/bot-endpoint', {
       sender,
       address: arg0,
-      amount,
+      amount: sendAmount * units,
     });
 
     if (res.data === 'LIMIT') {
@@ -64,7 +56,7 @@ client.on('message', async msg => {
       return;
     }
 
-    msg.reply(`I just sent ${amount} ${tokenSymbol} to address ${arg0}. View on Polkascan: ${polkascanUrl}/transaction/${res.data}.`);
+    msg.reply(`I just sent ${sendAmount} ${tokenSymbol} to address ${arg0}. Extrinsic hash: ${res.data}.`);
   }
 
   if (action === '!faucet') {

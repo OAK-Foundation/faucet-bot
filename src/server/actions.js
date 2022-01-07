@@ -2,19 +2,18 @@ const { WsProvider, ApiPromise } = require('@polkadot/api');
 const pdKeyring = require('@polkadot/keyring');
 
 class Actions {
-  async create({ mnemonic, endpoint, types, units }) {
-    this.units = units;
+  async create({ mnemonic, polkadot }) {
+    const { endpoint, ss58Prefix } = polkadot;
     const provider = new WsProvider(endpoint);
-    this.api = await ApiPromise.create({ provider, types });
+    this.api = await ApiPromise.create({ provider });
     const keyring = new pdKeyring.Keyring({ type: 'sr25519' });
+    keyring.setSS58Format(ss58Prefix);
     this.account = keyring.addFromMnemonic(mnemonic);
   }
 
-  async sendDOTs(address, amount = 150) {
-    amount = amount * this.units;
+  async sendDOTs(address, amount) {
     const transfer = this.api.tx.balances.transfer(address, amount);
     const hash = await transfer.signAndSend(this.account);
-
     return hash.toHex();
   }
 
