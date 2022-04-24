@@ -1,6 +1,9 @@
 const Datastore = require('nedb');
 const crypto = require('crypto');
 
+const { dripLimit } = require('./config');
+const { DRIP_TYPE } = require('../constants');
+
 const SECOND  = 1000;
 const MINUTE  = 60 * SECOND; 
 const HOUR    = 60 * MINUTE;
@@ -36,12 +39,14 @@ class Storage {
     });
   }
 
-  async isValid(username, addr, limit = 2, span = DAY) {
+  async isValid(username, addr, dripType = DRIP_TYPE.NORMAL, span = DAY) {
+    const limit = dripLimit[dripType];
+
     username = sha256(username);
     addr = sha256(addr);
 
-    const totalUsername = await this._query(username, span);
-    const totalAddr = await this._query(addr, span);
+    const totalUsername = await this._query(username, span, dripType);
+    const totalAddr = await this._query(addr, span, dripType);
 
     if (totalUsername < limit && totalAddr < limit) {
       return true;
@@ -50,33 +55,34 @@ class Storage {
     return false;
   }
 
-  async saveData(username, addr) {
+  async saveData(username, addr, dripType) {
     username = sha256(username);
     addr = sha256(addr);
 
-    await this._insert(username);
-    await this._insert(addr);
+    await this._insert(username, dripType);
+    await this._insert(addr, dripType);
     return true;
   }
 
-  async _insert(item) {
+  async _insert(item, dripType) {
     const timestamp = now();
 
     return new Promise((resolve, reject) => {
-      this._db.insert({ item, timestamp }, (err) => {
+      this._db.insert({ item, dripType, timestamp }, (err) => {
         if (err) reject(err);
         resolve();
       });
     });
   }
 
-  async _query(item, span) {
+  async _query(item, span, dripType) {
     const timestamp = now();
 
     const query = {
       $and: [
         {item},
         {timestamp: { $gt: timestamp - span }},
+        { dripType }
       ],
     };
 
