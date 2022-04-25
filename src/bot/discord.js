@@ -49,7 +49,7 @@ client.on('messageCreate', async msg => {
 Usage:
   !balance - Get the faucet's balance.
   !drip <Address> - Send ${tokenSymbol}s to <Address>.
-  !drip-later <Address> <Time> - Send ${tokenSymbol}s to <Address> later. Time format(UTC): 4/14 at 5pm
+  !drip-later <Address> <Time> - Send ${tokenSymbol}s to <Address> later. Time format(UTC): 04-14-2022 at 5PM
   !faucet - Prints usage information.`);
   }
 });

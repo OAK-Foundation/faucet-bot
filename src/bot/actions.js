@@ -59,19 +59,20 @@ const drip = async (sender, address) => {
 
 const parseTime = (time) => {
   try {
-  const matches = /^(\d+)\/(\d+) at (\d+)(am|pm)/s.exec(time);
+  const matches = /^(\d+)-(\d+)-(\d+) at (\d+)(AM|PM)/s.exec(time);
   if (!matches) {
     return null;
   }
 
   const month = Number(matches[1]);
   const day = Number(matches[2]);
-  const noon = matches[4];
-  let hour = Number(matches[3]);
-  hour = noon === 'pm' ? hour + 12 : hour;
+  const year = Number(matches[3]);
+  const noon = matches[5];
+
+  let hour = Number(matches[4]);
+  hour = noon === 'PM' ? hour + 12 : hour;
   
-  const now = moment();
-  const timeStr = `${now.year()}-${_.padStart(month, 2, '0')}-${_.padStart(day, 2, '0')}T${_.padStart(hour, 2, '0')}:00:00.000Z`;
+  const timeStr = `${_.padStart(year, 4, '0')}-${_.padStart(month, 2, '0')}-${_.padStart(day, 2, '0')}T${_.padStart(hour, 2, '0')}:00:00.000Z`;
 
   const newTime = moment(timeStr);
   if (!newTime.isValid()) {
@@ -109,7 +110,7 @@ const dripLater = async (sender, address, time) => {
     address,
     amount: sendAmount * units,
     dripType: DRIP_TYPE.LATER,
-    dripTime: dripTime.valueOf() / 1000,
+    dripTime: dripTime.valueOf(),
   });
 
   if (res.data === 'LIMIT') {
@@ -117,7 +118,7 @@ const dripLater = async (sender, address, time) => {
   }
 
   const { data: { hash, providerId } } = res;
-  return `I will send ${sendAmount} NEU to address ${address} at ${time}. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
+  return `I will send ${sendAmount} NEU to address ${address} at ${time} UTC. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
 }
 
 module.exports = { drip, dripLater };
