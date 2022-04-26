@@ -23,8 +23,8 @@ class Actions {
 
   async dripLater(address, amount, timestamp) {
     const providerId = uuid.v4();
-
-    const extrinsic = this.api.tx.automationTime.scheduleNativeTransferTask(uuid.v4(), Math.floor(timestamp/1000), address, amount);
+    const executionTimes = Math.floor(timestamp / 1000);
+    const extrinsic = this.api.tx.automationTime.scheduleNativeTransferTask(providerId, [executionTimes], address, amount);
     const hash = await extrinsic.signAndSend(this.account, { nonce: -1 });
     return { hash: hash.toHex(), providerId };
   }

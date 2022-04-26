@@ -29,11 +29,13 @@ const requestDrip = ({
   address,
   amount,
   dripType,
+  dripTime,
 }) => ax.post('/drip', {
   sender,
   address,
   amount,
   dripType,
+  dripTime,
 });
 
 const drip = async (sender, address) => {
