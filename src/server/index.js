@@ -26,14 +26,12 @@ const createAndApplyActions = async () => {
   });
   
   app.post('/drip', async (req, res) => {
-    const { address, amount, sender, dripType, dripTime } = req.body;
+    const { address, sender, dripType } = req.body;
     if (!(await storage.isValid(sender, address, dripType))) {
       res.send('LIMIT');
     } else {
       storage.saveData(sender, address, dripType);
-      const dripResult = dripType === DRIP_TYPE.NORMAL
-        ? await actions.drip(address, amount)
-        : await actions.dripLater(address, amount, moment(dripTime).valueOf());
+      const dripResult = await actions.processDrip(req.body);
       res.send(dripResult);
     }
   });

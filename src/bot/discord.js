@@ -45,12 +45,18 @@ client.on('messageCreate', async msg => {
     return;
   }
 
+  if (action === '!drip-swag') {
+    msg.reply(await actions.dripSwag(sender, args[1]));
+    return;
+  }
+
   if (action === '!faucet') {
     msg.reply(`
 Usage:
   !balance - Get the faucet's balance.
   !drip <Address> - Send ${tokenSymbol}s to <Address>.
   !drip-later <Address> <Time> - Send ${tokenSymbol}s to <Address> later. Time format(UTC): ${getNextHourStr()}
+  !drip-swag <Address> - For the next 24 hours, Send ${tokenSymbol}s to <Address> per hour.
   !faucet - Prints usage information.`);
   }
 });

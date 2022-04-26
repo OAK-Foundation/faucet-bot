@@ -1,8 +1,10 @@
 const { WsProvider, ApiPromise } = require('@polkadot/api');
 const pdKeyring = require('@polkadot/keyring');
 const uuid = require('uuid');
+const moment = require('moment');
 
-const { SS58_PREFIX } = require('../constants');
+const { DRIP_TYPE, SS58_PREFIX } = require('../constants');
+const { dripActions, units } = require('./config');
 
 class Actions {
   async create({ mnemonic, polkadot }) {
@@ -15,16 +17,46 @@ class Actions {
     this.account = keyring.addFromMnemonic(mnemonic);
   }
 
-  async drip(address, amount) {
+  async processDrip ({ dripType, ...params})  {
+    switch (dripType) {
+      case DRIP_TYPE.NORMAL: 
+        await this.drip(params);
+      case DRIP_TYPE.LATER: 
+        return await this.dripLater(params);
+      case DRIP_TYPE.SWAG: 
+        return this.dripSwag(params);
+      default:
+    }
+    return null;
+  }
+
+  async drip({ address }) {
+    const amount = dripActions[DRIP_TYPE.NORMAL].amount * units;
     const transfer = this.api.tx.balances.transfer(address, amount);
     const hash = await transfer.signAndSend(this.account, { nonce: -1 });
     return { hash: hash.toHex() };
   }
 
-  async dripLater(address, amount, timestamp) {
+  async dripLater({ address, timestamp }) {
+    const { amount } = dripActions[DRIP_TYPE.LATER].amount * units;
     const providerId = uuid.v4();
     const executionTime = Math.floor(timestamp / 1000);
     const extrinsic = this.api.tx.automationTime.scheduleNativeTransferTask(providerId, [executionTime], address, amount);
+    const hash = await extrinsic.signAndSend(this.account, { nonce: -1 });
+    return { hash: hash.toHex(), providerId };
+  }
+
+  async dripSwag({ address }) {
+    const { amount } = dripActions[DRIP_TYPE.SWAG].amount * units;
+    const providerId = uuid.v4();
+
+    const now = moment().utc();
+    const executionTimes = [];
+    for (let i = 1; i <= 24; i += 1) {
+      executionTimes.push(Math.ceil(now.add(i, 'hours').valueOf() / 1000));
+    }
+
+    const extrinsic = this.api.tx.automationTime.scheduleNativeTransferTask(providerId, executionTimes, address, amount);
     const hash = await extrinsic.signAndSend(this.account, { nonce: -1 });
     return { hash: hash.toHex(), providerId };
   }
