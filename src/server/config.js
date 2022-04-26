@@ -7,8 +7,10 @@ module.exports = {
   mnemonic: process.env.FAUCET_MNEMONIC,
   polkadot: {
     endpoint: process.env.CHAIN_WS_ENDPOINT || 'wss://rpc.testnet.oak.tech',
-    ss58Preifx: 51,
   },
   port: process.env.PORT || 5555,
-  sendTimesLimit: 1,
+  dripLimit: {
+    normal: 1,
+    later: 3,
+  },
 };

@@ -1,9 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const moment = require('moment');
 
-const Actions = require('./actions.js');
-const Storage = require('./storage.js');
+const Actions = require('./actions');
+const Storage = require('./storage');
 const config = require('./config');
+const { DRIP_TYPE } = require('../constants');
 
 const storage = new Storage();
 const app = express();
@@ -14,7 +16,7 @@ app.get('/health', (_, res) => {
 });
 
 const createAndApplyActions = async () => {
-  const { mnemonic, polkadot, sendTimesLimit } = config;
+  const { mnemonic, polkadot } = config;
   const actions = new Actions();
   await actions.create({ mnemonic, polkadot });
 
@@ -23,14 +25,16 @@ const createAndApplyActions = async () => {
     res.send(balance.toString());
   });
   
-  app.post('/bot-endpoint', async (req, res) => {
-    const { address, amount, sender } = req.body;
-    if (!(await storage.isValid(sender, address, sendTimesLimit)) && !sender.endsWith(':web3.foundation')) {
+  app.post('/drip', async (req, res) => {
+    const { address, amount, sender, dripType, dripTime } = req.body;
+    if (!(await storage.isValid(sender, address, dripType))) {
       res.send('LIMIT');
     } else {
-      storage.saveData(sender, address);
-      const hash = await actions.sendToken(address, amount);
-      res.send(hash);
+      storage.saveData(sender, address, dripType);
+      const dripResult = dripType === DRIP_TYPE.NORMAL
+        ? await actions.drip(address, amount)
+        : await actions.dripLater(address, amount, moment(dripTime).valueOf());
+      res.send(dripResult);
     }
   });
 }

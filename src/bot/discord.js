@@ -1,15 +1,17 @@
 const Discord = require('discord.js');
 const axios = require('axios');
 const _ = require('lodash');
-const pdKeyring = require('@polkadot/keyring');
+
 const config = require('./config');
+const actions = require('./actions');
+const { getNextHourStr } = require('./helperFn');
 
 // Check environment variables valid
 if (!process.env.ACCESS_TOKEN) {
   throw Error('Launch failed. ACCESS_TOKEN evironment variable is not set.');
 }
 
-const { tokenSymbol, sendAmount, units, networkName } = config;
+const { tokenSymbol, units } = config;
 
 let ax = axios.create({
   baseURL: process.env.BACKEND_URL || 'http://127.0.0.1:5555',
@@ -23,7 +25,8 @@ client.on('ready', () => {
 
 client.on('messageCreate', async msg => {
   const { content, author: { id: sender } } = msg;
-  let [action, arg0] = content.split(/[\s\n]+/);
+  let args = _.split(content, /[\s\n]+/);
+  const [ action ] = args;
 
   if (action === '!balance') {
     const res = await ax.get('/balance');
@@ -33,30 +36,13 @@ client.on('messageCreate', async msg => {
   }
 
   if (action === '!drip') {
-    if (_.isEmpty(arg0)) {
-      msg.reply('please enter a wallet address after !drip.');
-      return;
-    }
+    msg.reply(await actions.drip(sender, args[1]));
+    return;
+  }
 
-    try {
-      pdKeyring.decodeAddress(arg0);
-    } catch (e) {
-      msg.reply(`address ${arg0} entered is incompatible to ${networkName}.`);
-      return;
-    }
-
-    const res = await ax.post('/bot-endpoint', {
-      sender,
-      address: arg0,
-      amount: sendAmount * units,
-    });
-
-    if (res.data === 'LIMIT') {
-      msg.reply(`your Discord ID or the address has reached its daily quota. Please request only once every 24 hours.`);
-      return;
-    }
-
-    msg.reply(`I just sent ${sendAmount} ${tokenSymbol} to address ${arg0}. Extrinsic hash: ${res.data}.`);
+  if (action === '!drip-later') {
+    msg.reply(await actions.dripLater(sender, args[1], _.join(_.slice(args, 2), ' ')));
+    return;
   }
 
   if (action === '!faucet') {
@@ -64,6 +50,7 @@ client.on('messageCreate', async msg => {
 Usage:
   !balance - Get the faucet's balance.
   !drip <Address> - Send ${tokenSymbol}s to <Address>.
+  !drip-later <Address> <Time> - Send ${tokenSymbol}s to <Address> later. Time format(UTC): ${getNextHourStr()}
   !faucet - Prints usage information.`);
   }
 });
