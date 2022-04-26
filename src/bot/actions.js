@@ -5,6 +5,7 @@ const axios = require('axios');
 
 const { DRIP_TYPE, SS58_PREFIX } = require("../constants");
 const { tokenSymbol, sendAmount, units, networkName, maxScheduleSeconds } = require('./config');
+const { getNextHourStr } = require('./helperFn');
 
 const keyring = new pdKeyring.Keyring({ type: 'sr25519' });
 keyring.setSS58Format(SS58_PREFIX);
@@ -96,7 +97,7 @@ const dripLater = async (sender, address, time) => {
 
   const dripTime = parseTime(time);
   if (!dripTime) {
-    return `Please enter the specified time format(UTC). Example: !drip-later address <4/14 at 5pm>`;
+    return `Please enter the specified time format(UTC). Example: !drip-later address ${getNextHourStr}`;
   }
   if (dripTime.isBefore(moment())) {
     return "The time in UTC must be in the future.";

@@ -4,13 +4,14 @@ const _ = require('lodash');
 
 const config = require('./config');
 const actions = require('./actions');
+const { getNextHourStr } = require('./helperFn');
 
 // Check environment variables valid
 if (!process.env.ACCESS_TOKEN) {
   throw Error('Launch failed. ACCESS_TOKEN evironment variable is not set.');
 }
 
-const { tokenSymbol, sendAmount, units, networkName } = config;
+const { tokenSymbol, units } = config;
 
 let ax = axios.create({
   baseURL: process.env.BACKEND_URL || 'http://127.0.0.1:5555',
@@ -49,7 +50,7 @@ client.on('messageCreate', async msg => {
 Usage:
   !balance - Get the faucet's balance.
   !drip <Address> - Send ${tokenSymbol}s to <Address>.
-  !drip-later <Address> <Time> - Send ${tokenSymbol}s to <Address> later. Time format(UTC): 04-14-2022 at 5PM
+  !drip-later <Address> <Time> - Send ${tokenSymbol}s to <Address> later. Time format(UTC): ${getNextHourStr()}
   !faucet - Prints usage information.`);
   }
 });
