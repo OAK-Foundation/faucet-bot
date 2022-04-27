@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const { WsProvider, ApiPromise } = require('@polkadot/api');
 const pdKeyring = require('@polkadot/keyring');
 const uuid = require('uuid');
@@ -33,9 +34,9 @@ class Actions {
     console.log(`processDrip, dripType: ${dripType}, params: `, params);
     switch (dripType) {
       case DRIP_TYPE.NORMAL: 
-        return await this.drip(params);
+        return this.drip(params);
       case DRIP_TYPE.LATER: 
-        return await this.dripLater(params);
+        return this.dripLater(params);
       case DRIP_TYPE.SWAG: 
         return this.dripSwag(params);
       default:
@@ -64,9 +65,12 @@ class Actions {
     const providerId = uuid.v4();
 
     const now = moment().utc();
+    const nowWholeHour = moment(`${now.format('YYYY-MM-DD[T]hh')}:00:00Z`); //moment().utc();
+
     const executionTimes = [];
     for (let i = 1; i <= 24; i += 1) {
-      executionTimes.push(Math.ceil(now.add(i, 'hours').valueOf() / 1000));
+      const calcTime = nowWholeHour.clone();
+      executionTimes.push(Math.ceil(calcTime.add(i, 'hours').valueOf() / 1000));
     }
 
     const extrinsic = this.api.tx.automationTime.scheduleNativeTransferTask(providerId, executionTimes, address, amount);
