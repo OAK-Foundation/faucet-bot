@@ -1,7 +1,7 @@
 const Datastore = require('nedb');
 const crypto = require('crypto');
 
-const { dripLimit } = require('./config');
+const { dripActions } = require('./config');
 const { DRIP_TYPE } = require('../constants');
 
 const SECOND  = 1000;
@@ -40,7 +40,7 @@ class Storage {
   }
 
   async isValid(username, addr, dripType = DRIP_TYPE.NORMAL, span = DAY) {
-    const limit = dripLimit[dripType];
+    const limit = dripActions[dripType].timesLimit;
 
     username = sha256(username);
     addr = sha256(addr);

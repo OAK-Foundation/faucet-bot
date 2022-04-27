@@ -4,8 +4,9 @@ const pdKeyring = require('@polkadot/keyring');
 const axios = require('axios');
 
 const { DRIP_TYPE, SS58_PREFIX } = require("../constants");
-const { tokenSymbol, sendAmount, units, networkName, maxScheduleSeconds } = require('./config');
-const { getNextHourStr } = require('./helperFn');
+const { tokenSymbol, networkName, dripActions: { later: { maxScheduleSeconds } } } = require('./config');
+const { getNextHourStr, parseTime } = require('./helperFn');
+const { dripActions } = require("./config");
 
 const keyring = new pdKeyring.Keyring({ type: 'sr25519' });
 keyring.setSS58Format(SS58_PREFIX);
@@ -27,13 +28,11 @@ const isValidAddress = (address) => {
 const requestDrip = ({
   sender,
   address,
-  amount,
   dripType,
   dripTime,
 }) => ax.post('/drip', {
   sender,
   address,
-  amount,
   dripType,
   dripTime,
 });
@@ -50,42 +49,16 @@ const drip = async (sender, address) => {
   const res = await requestDrip({
     sender,
     address,
-    amount: sendAmount * units,
     dripType: DRIP_TYPE.NORMAL,
   });
 
   if (res.data === 'LIMIT') {
     return `Your Discord ID or the address has reached its daily quota. Please request only once every 24 hours.`;
   }
-  return `I just sent ${sendAmount} ${tokenSymbol} to address ${address}. Extrinsic hash: ${res.data.hash}.`;
-}
-
-const parseTime = (time) => {
-  try {
-  const matches = /^(\d+)-(\d+)-(\d+) at (\d+)(AM|PM)/s.exec(time);
-  if (!matches) {
-    return null;
-  }
-
-  const month = Number(matches[1]);
-  const day = Number(matches[2]);
-  const year = Number(matches[3]);
-  const noon = matches[5];
-
-  let hour = Number(matches[4]);
-  hour = noon === 'PM' ? hour + 12 : hour;
   
-  const timeStr = `${_.padStart(year, 4, '0')}-${_.padStart(month, 2, '0')}-${_.padStart(day, 2, '0')}T${_.padStart(hour, 2, '0')}:00:00.000Z`;
+  const { amount } = dripActions[DRIP_TYPE.NORMAL];
 
-  const newTime = moment(timeStr);
-  if (!newTime.isValid()) {
-    return null;
-  }
-  
-  return newTime;
-  } catch (error) {
-    return null;
-  }
+  return `I just sent ${amount} ${tokenSymbol} to address ${address}. Extrinsic hash: ${res.data.hash}.`;
 }
 
 const dripLater = async (sender, address, time) => {
@@ -99,7 +72,7 @@ const dripLater = async (sender, address, time) => {
 
   const dripTime = parseTime(time);
   if (!dripTime) {
-    return `Please enter the specified time format(UTC). Example: !drip-later address ${getNextHourStr}`;
+    return `Please enter the specified time format(UTC). Example: !drip-later address ${getNextHourStr()}`;
   }
   if (dripTime.isBefore(moment())) {
     return "The time in UTC must be in the future.";
@@ -111,7 +84,6 @@ const dripLater = async (sender, address, time) => {
   const res = await requestDrip({
     sender,
     address,
-    amount: sendAmount * units,
     dripType: DRIP_TYPE.LATER,
     dripTime: dripTime.valueOf(),
   });
@@ -119,9 +91,36 @@ const dripLater = async (sender, address, time) => {
   if (res.data === 'LIMIT') {
     return `Your Discord ID or the address has reached its daily quota. Please request 3 times every 24 hours.`;
   }
-
+  
+  const { amount } = dripActions[DRIP_TYPE.LATER];
   const { data: { hash, providerId } } = res;
-  return `I will send ${sendAmount} NEU to address ${address} at ${time} UTC. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
+
+  return `I will send ${amount} NEU to address ${address} at ${time} UTC. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
 }
 
-module.exports = { drip, dripLater };
+const dripSwag = async (sender, address) => {
+	if (_.isEmpty(address)) {
+    return 'please enter a wallet address after !drip-swag.';
+  }
+
+  if (!isValidAddress(address)) {
+    return `The address ${address} entered is incompatible to ${networkName}.`;
+  }
+
+  const res = await requestDrip({
+    sender,
+    address,
+    dripType: DRIP_TYPE.SWAG,
+  });
+
+  if (res.data === 'LIMIT') {
+    return `Your Discord ID or the address has reached its daily quota. Please request only once every 24 hours.`;
+  }
+
+  const { amount } = dripActions[DRIP_TYPE.SWAG];
+  const { data: { hash, providerId } } = res;
+
+  return `For the next 24 hours, I will send ${amount} NEU to address ${address} per hour. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
+}
+
+module.exports = { drip, dripLater, dripSwag };
