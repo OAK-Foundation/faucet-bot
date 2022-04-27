@@ -4,7 +4,7 @@ const pdKeyring = require('@polkadot/keyring');
 const axios = require('axios');
 
 const { DRIP_TYPE, SS58_PREFIX } = require("../constants");
-const { tokenSymbol, networkName, dripActions: { swag: { maxScheduleSeconds } } } = require('./config');
+const { tokenSymbol, networkName, dripActions: { later: { maxScheduleSeconds } } } = require('./config');
 const { getNextHourStr, parseTime } = require('./helperFn');
 const { dripActions } = require("./config");
 
@@ -72,7 +72,7 @@ const dripLater = async (sender, address, time) => {
 
   const dripTime = parseTime(time);
   if (!dripTime) {
-    return `Please enter the specified time format(UTC). Example: !drip-later address ${getNextHourStr}`;
+    return `Please enter the specified time format(UTC). Example: !drip-later address ${getNextHourStr()}`;
   }
   if (dripTime.isBefore(moment())) {
     return "The time in UTC must be in the future.";
@@ -100,7 +100,7 @@ const dripLater = async (sender, address, time) => {
 
 const dripSwag = async (sender, address) => {
 	if (_.isEmpty(address)) {
-    return 'please enter a wallet address after !drip-later.';
+    return 'please enter a wallet address after !drip-swag.';
   }
 
   if (!isValidAddress(address)) {
@@ -114,7 +114,7 @@ const dripSwag = async (sender, address) => {
   });
 
   if (res.data === 'LIMIT') {
-    return `Your Discord ID or the address has reached its daily quota. Please request 1 times every 24 hours.`;
+    return `Your Discord ID or the address has reached its daily quota. Please request only once every 24 hours.`;
   }
 
   const { amount } = dripActions[DRIP_TYPE.SWAG];
