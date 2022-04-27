@@ -30,10 +30,10 @@ class Actions {
   }
 
   async processDrip ({ dripType, ...params})  {
-    console.log('processDrip, params: ', params);
+    console.log(`processDrip, dripType: ${dripType}, params: `, params);
     switch (dripType) {
       case DRIP_TYPE.NORMAL: 
-        await this.drip(params);
+        return await this.drip(params);
       case DRIP_TYPE.LATER: 
         return await this.dripLater(params);
       case DRIP_TYPE.SWAG: 
