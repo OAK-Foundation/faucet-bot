@@ -1,5 +1,5 @@
 const config = {
-  networkName: 'Neumann Network',
+  networkName: 'Turing Staging Network',
   tokenSymbol: 'TUR',
   units: 10**10,
   dripActions: {
