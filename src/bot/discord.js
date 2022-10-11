@@ -18,7 +18,7 @@ let ax = axios.create({
   timeout: 10000,
 });
 
-const client = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES] });
+this.client = new Discord.Client({ intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.MessageContent] });
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
