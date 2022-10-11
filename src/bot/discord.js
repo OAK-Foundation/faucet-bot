@@ -23,6 +23,10 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
+client.on('message', message => {
+  console.log('message: ', message);
+});
+
 client.on('messageCreate', async msg => {
   const { content, author: { id: sender } } = msg;
   let args = _.split(content, /[\s\n]+/);
