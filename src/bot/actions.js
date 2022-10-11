@@ -4,9 +4,10 @@ const pdKeyring = require('@polkadot/keyring');
 const axios = require('axios');
 
 const { DRIP_TYPE, SS58_PREFIX } = require("../constants");
-const { tokenSymbol, networkName, dripActions: { later: { maxScheduleSeconds } } } = require('./config');
+const { tokenSymbol, networkName, dripActions } = require('./config');
 const { getNextHourStr, parseTime } = require('./helperFn');
-const { dripActions } = require("./config");
+
+const { later: { maxScheduleSeconds } } = dripActions;
 
 const keyring = new pdKeyring.Keyring({ type: 'sr25519' });
 keyring.setSS58Format(SS58_PREFIX);
@@ -95,7 +96,7 @@ const dripLater = async (sender, address, time) => {
   const { amount } = dripActions[DRIP_TYPE.LATER];
   const { data: { hash, providerId } } = res;
 
-  return `I will send ${amount} NEU to address ${address} at ${time} UTC. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
+  return `I will send ${amount} ${tokenSymbol} to address ${address} at ${time} UTC. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
 }
 
 const dripSwag = async (sender, address) => {
@@ -120,7 +121,7 @@ const dripSwag = async (sender, address) => {
   const { amount } = dripActions[DRIP_TYPE.SWAG];
   const { data: { hash, providerId } } = res;
 
-  return `For the next 24 hours, I will send ${amount} NEU to address ${address} per hour. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
+  return `For the next 24 hours, I will send ${amount} ${tokenSymbol} to address ${address} per hour. Extrinsic hash: ${hash}. Your provided_id: ${providerId}.`;
 }
 
 module.exports = { drip, dripLater, dripSwag };
