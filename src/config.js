@@ -1,6 +1,6 @@
 const config = {
   networkName: 'Neumann Network',
-  tokenSymbol: 'NEU',
+  tokenSymbol: 'TUR',
   units: 10**10,
   dripActions: {
     normal: {
