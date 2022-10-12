@@ -1,7 +1,5 @@
 const DRIP_TYPE = {
 	NORMAL: 'normal',
-	LATER: 'later',
-	SWAG: 'swag',
 };
 
 const SS58_PREFIX = 51;
