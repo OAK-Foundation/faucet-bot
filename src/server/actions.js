@@ -1,8 +1,6 @@
 const _ = require('lodash');
 const { WsProvider, ApiPromise } = require('@polkadot/api');
 const pdKeyring = require('@polkadot/keyring');
-const uuid = require('uuid');
-const moment = require('moment');
 
 const { DRIP_TYPE, SS58_PREFIX } = require('../constants');
 const { dripActions, units } = require('./config');
@@ -35,10 +33,6 @@ class Actions {
     switch (dripType) {
       case DRIP_TYPE.NORMAL: 
         return this.drip(params);
-      case DRIP_TYPE.LATER: 
-        return this.dripLater(params);
-      case DRIP_TYPE.SWAG: 
-        return this.dripSwag(params);
       default:
     }
     return null;
@@ -49,33 +43,6 @@ class Actions {
     const extrinsic = this.api.tx.balances.transfer(address, amount);
     await this.sendExtrinsic(extrinsic, this.account);
     return { hash: extrinsic.hash.toHex() };
-  }
-
-  async dripLater({ address, dripTime }) {
-    const amount = dripActions[DRIP_TYPE.LATER].amount * units;
-    const providerId = uuid.v4();
-    const executionTime = Math.floor(dripTime / 1000);
-    const extrinsic = this.api.tx.automationTime.scheduleNativeTransferTask(providerId, [executionTime], address, amount);
-    await this.sendExtrinsic(extrinsic, this.account);
-    return { hash: extrinsic.hash.toHex(), providerId };
-  }
-
-  async dripSwag({ address }) {
-    const amount = dripActions[DRIP_TYPE.SWAG].amount * units;
-    const providerId = uuid.v4();
-
-    const now = moment().utc();
-    const nowWholeHour = moment(`${now.format('YYYY-MM-DD[T]hh')}:00:00Z`); //moment().utc();
-
-    const executionTimes = [];
-    for (let i = 1; i <= 24; i += 1) {
-      const calcTime = nowWholeHour.clone();
-      executionTimes.push(Math.ceil(calcTime.add(i, 'hours').valueOf() / 1000));
-    }
-
-    const extrinsic = this.api.tx.automationTime.scheduleNativeTransferTask(providerId, executionTimes, address, amount);
-    await this.sendExtrinsic(extrinsic, this.account);
-    return { hash: extrinsic.hash.toHex(), providerId };
   }
 
   async checkBalance() {
