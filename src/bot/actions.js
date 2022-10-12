@@ -59,7 +59,7 @@ const drip = async (sender, address) => {
   
   const { amount } = dripActions[DRIP_TYPE.NORMAL];
 
-  return `I just sent ${amount} ${tokenSymbol} to address ${address}. Extrinsic hash: ${res.data.hash}.\nTry out our recurring payment feature on https://ace.web3go.xyz! (Click on Connect at the top right corner to select Turing Staging network)`;
+  return `I just sent ${amount} ${tokenSymbol} to address ${address}. Extrinsic hash: ${res.data.hash}.\n\nTry out our recurring payment feature on https://ace.web3go.xyz! (Click on Connect at the top right corner to select Turing Staging network)`;
 }
 
 const dripLater = async (sender, address, time) => {
