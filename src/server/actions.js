@@ -1,8 +1,6 @@
 const _ = require('lodash');
 const { WsProvider, ApiPromise } = require('@polkadot/api');
 const pdKeyring = require('@polkadot/keyring');
-const uuid = require('uuid');
-const moment = require('moment');
 
 const { DRIP_TYPE, SS58_PREFIX } = require('../constants');
 const { dripActions, units } = require('./config');

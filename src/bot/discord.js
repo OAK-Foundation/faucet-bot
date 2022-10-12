@@ -4,7 +4,6 @@ const _ = require('lodash');
 
 const config = require('./config');
 const actions = require('./actions');
-const { getNextHourStr } = require('./helperFn');
 
 // Check environment variables valid
 if (!process.env.ACCESS_TOKEN) {

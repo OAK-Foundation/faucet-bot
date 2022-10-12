@@ -1,13 +1,9 @@
 const _ = require('lodash');
-const moment = require('moment');
 const pdKeyring = require('@polkadot/keyring');
 const axios = require('axios');
 
 const { DRIP_TYPE, SS58_PREFIX } = require("../constants");
 const { tokenSymbol, networkName, dripActions } = require('./config');
-const { getNextHourStr, parseTime } = require('./helperFn');
-
-const { later: { maxScheduleSeconds } } = dripActions;
 
 const keyring = new pdKeyring.Keyring({ type: 'sr25519' });
 keyring.setSS58Format(SS58_PREFIX);
@@ -62,4 +58,4 @@ const drip = async (sender, address) => {
   return `I just sent ${amount} ${tokenSymbol} to ${address}. Extrinsic hash: ${res.data.hash}.\n\nTry out our recurring payment feature on https://ace.web3go.xyz ! (Click on Connect at the top right corner to select Turing Staging network)`;
 }
 
-module.exports = { drip, dripLater, dripSwag };
+module.exports = { drip };
